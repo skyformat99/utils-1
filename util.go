@@ -4,8 +4,14 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"encoding/json"
 )
 
+func CheckErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 /**
  * 类型检测 要检测的变量  期望变量类型
  */
@@ -137,3 +143,23 @@ func Implode(data interface{}, glue string) string {
 
 	return strings.Join(tmp, glue)
 }
+
+/**
+ * json转码
+ */
+func JsonEncode(data interface{}) string{
+	res, err := json.Marshal(data)
+	CheckErr(err)
+
+	return string(res)
+}
+// todo
+//func JsonDecode(data string) interface{}{
+//	type res struct{
+//		arr []
+//	}
+//	err := json.Unmarshal(data, &res)
+//	gorose.CheckErr(err)
+//
+//	return string(res)
+//}
