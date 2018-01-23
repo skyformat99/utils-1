@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"encoding/json"
+	"net/http"
 )
 
 func CheckErr(err error) {
@@ -34,19 +35,19 @@ func InArray(needle interface{}, hystack interface{}) bool {
 	switch key := needle.(type) {
 	case string:
 		for _, item := range hystack.([]string) {
-			if key==item {
+			if key == item {
 				return true
 			}
 		}
 	case int:
 		for _, item := range hystack.([]int) {
-			if key==item {
+			if key == item {
 				return true
 			}
 		}
 	case int64:
 		for _, item := range hystack.([]int64) {
-			if key==item {
+			if key == item {
 				return true
 			}
 		}
@@ -69,7 +70,7 @@ func ParseStr(data interface{}) string {
 	case int:
 		return strconv.Itoa(data.(int))
 	case int64:
-		return strconv.FormatInt(data.(int64),10)
+		return strconv.FormatInt(data.(int64), 10)
 	case string:
 		return data.(string)
 	default:
@@ -109,12 +110,13 @@ func Implode(data interface{}, glue string) string {
 /**
  * json转码
  */
-func JsonEncode(data interface{}) string{
+func JsonEncode(data interface{}) string {
 	res, err := json.Marshal(data)
 	CheckErr(err)
 
 	return string(res)
 }
+
 // todo
 //func JsonDecode(data string) interface{}{
 //	type res struct{
@@ -125,3 +127,91 @@ func JsonEncode(data interface{}) string{
 //
 //	return string(res)
 //}
+func SuccessReturn(args ...interface{}) interface{} {
+	argsLength := len(args)
+
+	//var w http.ResponseWriter
+	var data = make(map[string]interface{})
+
+	data["msg"] = "success"
+
+	if argsLength > 0 {
+		data["data"] = args[0]
+	} else {
+		data["data"] = ""
+	}
+
+	switch argsLength {
+	case 0:
+		data["status"] = http.StatusOK
+	case 1:
+		//w.WriteHeader(http.StatusOK)
+		// 正确的返回数据
+		data["status"] = http.StatusOK
+	case 2:
+		switch args[1].(type) {
+		case int:
+			//w.WriteHeader(args[1].(int))
+			data["status"] = args[1].(int)
+		case string:
+			//w.WriteHeader(http.StatusOK)
+			data["status"] = http.StatusOK
+		default:
+			panic("调用返回的状态值应该为int类型")
+		}
+	case 3:
+		switch args[1].(type) {
+		case int:
+			//w.WriteHeader(args[1].(int))
+			data["status"] = args[1].(int)
+		case string:
+			//w.WriteHeader(http.StatusOK)
+			data["status"] = http.StatusOK
+		default:
+			panic("调用返回的状态值应该为int类型")
+		}
+		data["ext"] = args[2]
+	default:
+		panic("调用返回的参数有wu")
+	}
+
+	return data
+}
+
+func FailReturn(args ...interface{}) interface{} {
+	var data []interface{}
+	argsLength := len(args)
+	if argsLength==0{
+		data = append(data, "fail")
+	} else {
+		data = append(data, args[0])
+	}
+	switch argsLength {
+	case 0:
+		data = append(data, http.StatusNoContent)
+	case 1:
+		data = append(data, http.StatusNoContent)
+	case 2:
+		switch args[1].(type) {
+		case int:
+			data = append(data, args[1].(int))
+		case string:
+			data = append(data, http.StatusNoContent)
+		default:
+			panic("调用返回的状态值应该为int类型")
+		}
+	case 3:
+		switch args[1].(type) {
+		case int:
+			data = append(data, args[1].(int))
+		case string:
+			data = append(data, http.StatusNoContent)
+		default:
+			panic("调用返回的状态值应该为int类型")
+		}
+	default:
+		panic("调用返回的参数有误")
+	}
+
+	return SuccessReturn(data...)
+}
